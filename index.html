@@ -4,6 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>1RAFTAR - Official App Download</title>
+
+    <!-- Meta Pixel Code -->
+    <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1557999452293992');
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=1557999452293992&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- End Meta Pixel Code -->
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome Icons -->
@@ -226,7 +244,7 @@
         </div>
 
         <div class="w-full flex flex-col items-center">
-            <a id="downloadBtn" href="https://raw.githubusercontent.com/digitalkaushal123-ship-it/1RAFTAR/main/1raftar.apk" download="1raftar.apk" class="shimmer-effect btn-blue-glow w-full py-4 px-6 rounded-2xl flex items-center justify-center gap-3 text-white font-brand font-black text-base sm:text-lg tracking-wider cursor-pointer border border-cyan-200/40 relative">
+            <a id="downloadBtn" href="https://raw.githubusercontent.com/digitalkaushal123-ship-it/1RAFTAR/main/1raftar.apk" download="1raftar.apk" onclick="trackApkDownload(event, this)" class="shimmer-effect btn-blue-glow w-full py-4 px-6 rounded-2xl flex items-center justify-center gap-3 text-white font-brand font-black text-base sm:text-lg tracking-wider cursor-pointer border border-cyan-200/40 relative">
                 <i class="fa-brands fa-android text-2xl text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]"></i>
                 <span class="drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">DOWNLOAD APK</span>
             </a>
@@ -279,6 +297,35 @@
             currentMembers = Math.max(70300, currentMembers + delta);
             memberCountEl.textContent = currentMembers.toLocaleString('en-US') + '+';
         }, 3500);
+
+        // Track the user's APK download initiation, then start the actual file download.
+        function trackApkDownload(event, link) {
+            event.preventDefault();
+            const destination = link.href;
+            const notice = document.getElementById('downloadNotice');
+
+            if (notice) {
+                notice.classList.remove('hidden');
+                notice.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-1"></i> Starting APK download...';
+            }
+
+            let continued = false;
+            const startDownload = () => {
+                if (continued) return;
+                continued = true;
+                window.location.href = destination;
+            };
+
+            // Continue after Meta Pixel has had a short chance to queue/send the event.
+            if (typeof window.fbq === 'function') {
+                fbq('trackCustom', 'Download');
+                setTimeout(startDownload, 250);
+                // Safety fallback if the callback isn't invoked by the browser.
+                setTimeout(startDownload, 1200);
+            } else {
+                startDownload();
+            }
+        }
 
         // The download button links directly to the real APK hosted in this repository.
     </script>
