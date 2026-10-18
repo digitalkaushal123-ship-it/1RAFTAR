@@ -312,7 +312,7 @@
 
             // Open the APK URL synchronously from the user gesture so the request starts
             // before the Pixel event is sent, while keeping this landing page open.
-            const downloadTab = window.open(destination, '_blank', 'noopener');
+            const downloadTab = window.open(destination, '_blank');
             if (downloadTab) {
                 if (typeof window.fbq === 'function') {
                     fbq('trackCustom', 'Download');
