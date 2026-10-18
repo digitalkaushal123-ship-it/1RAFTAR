@@ -298,7 +298,8 @@
             memberCountEl.textContent = currentMembers.toLocaleString('en-US') + '+';
         }, 3500);
 
-        // Track the user's APK download initiation, then start the actual file download.
+        // Start the APK request first, then record the initiation event.
+        // A browser page cannot confirm that the user completed the full download.
         function trackApkDownload(event, link) {
             event.preventDefault();
             const destination = link.href;
@@ -309,21 +310,17 @@
                 notice.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-1"></i> Starting APK download...';
             }
 
-            let continued = false;
-            const startDownload = () => {
-                if (continued) return;
-                continued = true;
-                window.location.href = destination;
-            };
-
-            // Continue after Meta Pixel has had a short chance to queue/send the event.
-            if (typeof window.fbq === 'function') {
-                fbq('trackCustom', 'Download');
-                setTimeout(startDownload, 250);
-                // Safety fallback if the callback isn't invoked by the browser.
-                setTimeout(startDownload, 1200);
+            // Open the APK URL synchronously from the user gesture so the request starts
+            // before the Pixel event is sent, while keeping this landing page open.
+            const downloadTab = window.open(destination, '_blank', 'noopener');
+            if (downloadTab) {
+                if (typeof window.fbq === 'function') {
+                    fbq('trackCustom', 'Download');
+                }
             } else {
-                startDownload();
+                // Popup blockers may prevent a new tab; fall back to same-tab navigation.
+                // Do not send the event here because navigation can prevent it from being sent.
+                window.location.href = destination;
             }
         }
 
