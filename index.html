@@ -15,11 +15,11 @@
     t.src=v;s=b.getElementsByTagName(e)[0];
     s.parentNode.insertBefore(t,s)}(window, document,'script',
     'https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init', '1012729471853044');
+    fbq('init', '3229066490636708');
     fbq('track', 'PageView');
     </script>
     <noscript><img height="1" width="1" style="display:none"
-    src="https://www.facebook.com/tr?id=1012729471853044&ev=PageView&noscript=1"
+    src="https://www.facebook.com/tr?id=3229066490636708&ev=PageView&noscript=1"
     /></noscript>
     <!-- End Meta Pixel Code -->
     <!-- Tailwind CSS CDN -->
@@ -298,8 +298,8 @@
             memberCountEl.textContent = currentMembers.toLocaleString('en-US') + '+';
         }, 3500);
 
-        // Start the APK request first, then record the initiation event.
-        // A browser page cannot confirm that the user completed the full download.
+        // Fire the custom Download event only when the user initiates the APK request.
+        // A landing page cannot verify that Android completes installation or the full download.
         function trackApkDownload(event, link) {
             event.preventDefault();
             const destination = link.href;
@@ -310,17 +310,29 @@
                 notice.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-1"></i> Starting APK download...';
             }
 
-            // Open the APK URL synchronously from the user gesture so the request starts
-            // before the Pixel event is sent, while keeping this landing page open.
+            // Start the APK request directly from the user's click. Clear opener access
+            // immediately, then send the event after the browser has opened the APK URL.
             const downloadTab = window.open(destination, '_blank');
             if (downloadTab) {
+                try { downloadTab.opener = null; } catch (_) {}
                 if (typeof window.fbq === 'function') {
                     fbq('trackCustom', 'Download');
                 }
             } else {
-                // Popup blockers may prevent a new tab; fall back to same-tab navigation.
-                // Do not send the event here because navigation can prevent it from being sent.
-                window.location.href = destination;
+                // If popups are blocked, send the event with a callback before navigating.
+                // The timeout prevents a stalled callback from leaving the user on this page.
+                let navigated = false;
+                const navigateToApk = () => {
+                    if (navigated) return;
+                    navigated = true;
+                    window.location.href = destination;
+                };
+                if (typeof window.fbq === 'function') {
+                    fbq('trackCustom', 'Download', {}, { eventCallback: navigateToApk, eventTimeout: 800 });
+                    window.setTimeout(navigateToApk, 900);
+                } else {
+                    navigateToApk();
+                }
             }
         }
 
